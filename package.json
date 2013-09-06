@@ -1,0 +1,7 @@
+{
+  "name": "fxos-sniffer",
+  "version": "0.0.1",
+  "dependencies": {
+    "pcap": ">= 0.0.1"
+  }
+}
