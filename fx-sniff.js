@@ -156,12 +156,17 @@ function startSession(path) {
 
   session.on('packet', function (raw) {
     var packet = pcap.decode.packet(raw);
-    tracker.track_packet(packet);
+    var session = tracker.track_packet(packet);
 
     //util.puts(pcap.print.packet(packet));
+    var millisSinceSYN = packet.pcap_header.time_ms - session.syn_time;
     if (packet.link && packet.link.ip && packet.link.ip.tcp) {
       var tcp = packet.link.ip.tcp;
       if (tcp.tls) {
+        var relstr = millisSinceSYN.toFixed(3);
+        relstr = '          '.slice(0, 10 - relstr.length) + relstr;
+        relstr = relstr.slice(0, 3) + ' ' + relstr.slice(3);
+        console.log('reltime:', relstr + 'ms');
         console.log(util.inspect(tcp.tls, { depth: 4, colors: true }));
       }
     }
