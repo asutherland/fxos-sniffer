@@ -1,0 +1,4 @@
+[submodule "node_modules/pcap"]
+	path = node_modules/pcap
+	url = git://github.com/asutherland/node_pcap.git
+	branch = tls-decoding

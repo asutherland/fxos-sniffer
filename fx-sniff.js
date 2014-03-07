@@ -150,13 +150,21 @@ function killLiveRemotes() {
 
 function startSession(path) {
   console.log('creating session');
+  var tracker = new pcap.TCP_tracker();
   var session = pcap.createOfflineSession(path);
   console.log('created, wish we were nonblocking');
 
   session.on('packet', function (raw) {
     var packet = pcap.decode.packet(raw);
+    tracker.track_packet(packet);
+
     //util.puts(pcap.print.packet(packet));
-    console.log(util.inspect(packet, { depth: 4, colors: true }));
+    if (packet.link && packet.link.ip && packet.link.ip.tcp) {
+      var tcp = packet.link.ip.tcp;
+      if (tcp.tls) {
+        console.log(util.inspect(tcp.tls, { depth: 4, colors: true }));
+      }
+    }
   });
 }
 
@@ -223,6 +231,14 @@ function main() {
             'Save a copy of the log to the given path.',
             '/tmp/fxsniffed.pcap')
     .action(function(options) {
+      // clean cleanup is only required if we're doing remote stuff...
+      process.on('SIGINT', cleanCleanup);
+      process.on('uncaughtException', function(err) {
+        console.warn('Unhandled error', err, '\n', err.stack);
+        console.warn('shutting down');
+        cleanCleanup();
+      });
+
       remotePcapMagic({
         // Our goal here is to figure out how to tell the device to talk to us.
         bindInterface: options.localInterface,
@@ -255,12 +271,5 @@ function cleanCleanup() {
     process.exit(0);
   }, 1000);
 }
-
-process.on('SIGINT', cleanCleanup);
-process.on('uncaughtException', function(err) {
-  console.warn('Unhandled error', err, '\n', err.stack);
-  console.warn('shutting down');
-  cleanCleanup();
-});
 
 main();
